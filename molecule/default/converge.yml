@@ -10,4 +10,4 @@
     LANGUAGE: en_UK.utf8
 
   roles:
-    - role: ansible-prometheus-pushgateway
+    - role: ansible-pushgateway
