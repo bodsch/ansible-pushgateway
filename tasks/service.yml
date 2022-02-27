@@ -1,0 +1,13 @@
+---
+
+- name: restart pushgateway if needed
+  meta: flush_handlers
+
+- name: ensure pushgateway is enabled on boot
+  become: true
+  service:
+    name: pushgateway
+    enabled: true
+    state: started
+
+...

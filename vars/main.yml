@@ -1,0 +1,46 @@
+---
+
+go_arch_map:
+  i386: '386'
+  x86_64: 'amd64'
+
+go_arch: "{{
+  go_arch_map[ansible_architecture] |
+  default(ansible_architecture) }}"
+
+pushgateway_defaults_release:
+  download_url: https://github.com/prometheus/pushgateway/releases/
+  file: pushgateway-{{ pushgateway_version }}.linux-{{ go_arch }}.tar.gz
+
+pushgateway_main_version: "{{ pushgateway_version[0:3] }}"
+
+pushgateway_install_path: /usr/local/bin/pushgateway/{{ pushgateway_version }}
+
+pushgateway_delegate_to: localhost
+
+pushgateway_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/pushgateway', true) }}/{{ pushgateway_version }}"
+
+pushgateway_requirements:
+  - iproute2
+
+pushgateway_defaults_web:
+  listen_address: "127.0.0.1"
+  listen_port: 9091
+  external_url: ""
+  enable_lifecycle: false
+  enable_admin_api: false
+
+pushgateway_defaults_persistence:
+  file: ""
+  interval: 5m
+
+pushgateway_defaults_logging:
+  level: info
+
+pushgateway_config_directory: /etc/default
+
+systemd_lib_directory: /lib/systemd/system
+
+...

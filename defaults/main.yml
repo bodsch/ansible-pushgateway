@@ -1,0 +1,19 @@
+---
+
+pushgateway_version: "1.4.2"
+
+pushgateway_release: {}
+
+pushgateway_system_user: pushgateway
+pushgateway_system_group: pushgateway
+# pushgateway_config_dir: /etc/pushgateway
+
+pushgateway_direct_download: false
+
+pushgateway_logging: {}
+
+pushgateway_web: {}
+
+pushgateway_persistence: {}
+
+...
