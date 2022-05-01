@@ -3,7 +3,6 @@
 from __future__ import (absolute_import, print_function)
 __metaclass__ = type
 
-import os
 import re
 from ansible.utils.display import Display
 
@@ -37,4 +36,3 @@ class FilterModule(object):
         display.v("= checksum: {}".format(checksum))
 
         return checksum
-
