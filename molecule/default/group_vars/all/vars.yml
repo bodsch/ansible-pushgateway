@@ -1,6 +1,13 @@
 ---
 
-pushgateway_server:
-  http_listen_address: "127.0.0.1"
-  http_listen_port: 9080
-  log_level: debug
+pushgateway_version: latest
+
+pushgateway_service:
+  log:
+    level: debug
+  web:
+    listen_address: "0.0.0.0:9080"
+  persistence:
+    file: /run/pushgateway/persistence
+
+...

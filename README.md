@@ -12,6 +12,18 @@ Ansible role to setup [pushgateway](https://github.com/prometheus/pushgateway).
 [issues]: https://github.com/bodsch/ansible-pushgateway/issues?q=is%3Aopen+is%3Aissue
 [releases]: https://github.com/bodsch/ansible-pushgateway/releases
 
+If `latest` is set for `pushgateway_version`, the role tries to install the latest release version.  
+**Please use this with caution, as incompatibilities between releases may occur!**
+
+The binaries are installed below `/usr/local/bin/pushgateway/${pushgateway_version}` and later linked to `/usr/bin`. 
+This should make it possible to downgrade relatively safely.
+
+The Prometheus archive is stored on the Ansible controller, unpacked and then the binaries are copied to the target system.
+The cache directory can be defined via the environment variable `CUSTOM_LOCAL_TMP_DIRECTORY`. 
+By default it is `${HOME}/.cache/ansible/pushgateway`.
+If this type of installation is not desired, the download can take place directly on the target system. 
+However, this must be explicitly activated by setting `pushgateway_direct_download` to `true`.
+
 
 ## Requirements & Dependencies
 
@@ -44,13 +56,31 @@ pushgateway_system_group: pushgateway
 
 pushgateway_direct_download: false
 
-pushgateway_logging: {}
-
-pushgateway_web: {}
-
-pushgateway_persistence: {}
+pushgateway_service: {}
 ```
 
+#### `pushgateway_service`
+
+```yaml
+pushgateway_service:
+  log:
+    level: info
+    format: ""
+  web:
+    config:
+      file: ""
+    listen_address: "127.0.0.1:9091"
+    telemetry_path: ""
+    external_url: ""
+    route_prefix: ""
+    enable_lifecycle: false
+    enable_admin_api: false
+  persistence:
+    file: ""
+    interval: 5m
+  push:
+    disable_consistency_check: false
+```
 
 ## Contribution
 

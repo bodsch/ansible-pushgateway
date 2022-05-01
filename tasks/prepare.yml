@@ -36,6 +36,28 @@
     name: "{{ pushgateway_requirements }}"
     state: present
 
+- block:
+    - name: get latest release
+      uri:
+        url: "https://api.github.com/repos/prometheus/pushgateway/releases/latest"
+        method: GET
+        return_content: true
+        status_code: 200
+        body_format: json
+        validate_certs: false
+        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+      no_log: "{{ not lookup('env', 'ANSIBLE_DEBUG') | bool }}"
+      register: _latest_release
+      until: _latest_release.status == 200
+      retries: 5
+
+    - name: set pushgateway version to {{ _latest_release.json.tag_name[1:] }}
+      set_fact:
+        pushgateway_version: "{{ _latest_release.json.tag_name[1:] }}"
+  when:
+    - pushgateway_version == "latest"
+
 - name: detect our installation path '{{ pushgateway_install_path | dirname }}'
   stat:
     path: "{{ pushgateway_install_path | dirname }}"
@@ -51,15 +73,24 @@
         state: stopped
         enabled: false
 
+    - name: remove installed systemd unit
+      file:
+        state: absent
+        path: /etc/systemd/system/pushgateway.service
+
     - name: remove installed pushgateway
       file:
         state: absent
         path: "{{ stat_pushgateway_path.stat.path }}"
+
+    - name: flush handlers
+      meta: flush_handlers
   when:
     - stat_pushgateway_path is defined
     - stat_pushgateway_path.stat is defined
     - stat_pushgateway_path.stat.islnk is defined
     - stat_pushgateway_path.stat.islnk
+
 
 - name: detect installed pushgateway binary
   stat:
@@ -116,19 +147,20 @@
     pushgateway_release: "{{ pushgateway_defaults_release |
       combine( pushgateway_release, recursive=True ) }}"
 
-- name: merge pushgateway web configuration between defaults and custom
+- name: merge pushgateway service configuration between defaults and custom
   set_fact:
-    pushgateway_web: "{{ pushgateway_defaults_web |
-      combine( pushgateway_web, recursive=True ) }}"
+    pushgateway_service: "{{ pushgateway_defaults_service |
+      combine( pushgateway_service, recursive=True ) }}"
 
-- name: merge pushgateway persistence configuration between defaults and custom
-  set_fact:
-    pushgateway_persistence: "{{ pushgateway_defaults_persistence |
-      combine( pushgateway_persistence, recursive=True ) }}"
-
-- name: merge pushgateway logging configuration between defaults and custom
-  set_fact:
-    pushgateway_logging: "{{ pushgateway_defaults_logging |
-      combine( pushgateway_logging, recursive=True ) }}"
+- name: create persistence directory
+  file:
+    state: directory
+    owner: "{{ pushgateway_system_user }}"
+    group: "{{ pushgateway_system_group }}"
+    mode: 0750
+    path: "{{ pushgateway_service.persistence.file | dirname }}"
+  when:
+    - pushgateway_service.persistence.file is defined
+    - pushgateway_service.persistence.file | string | length > 0
 
 ...

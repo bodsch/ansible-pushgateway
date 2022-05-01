@@ -4,16 +4,49 @@
 GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
 
 OPTIONS="
-  --log.level={{ pushgateway_logging.level | default('info') }} \
-{% if pushgateway_persistence is defined and
-      pushgateway_persistence.file is defined and
-      pushgateway_persistence.file | string | length > 0 %}
-  --persistence.file={{ pushgateway_persistence.file }} \
-  --persistence.interval={{ pushgateway_persistence.interval | default('5m') }} \
-{% endif %}
-  --web.listen-address={{ pushgateway_web.listen_address | default('127.0.0.1') }}:{{ pushgateway_web.listen_port | default('9091') }}
-"
+{% if pushgateway_service is defined %}
+  {% if pushgateway_service.persistence is defined %}
 
+    {% if pushgateway_service.persistence.file is defined and
+          pushgateway_service.persistence.file | string | length > 0 %}
+  --persistence.file={{ pushgateway_service.persistence.file }} \
+    {% endif %}
+  --persistence.interval={{ pushgateway_service.persistence.interval | default('5m') }} \
+  {% endif %}
+  {% if pushgateway_service.web is defined %}
+    {% if pushgateway_service.web.listen_address is defined and
+          pushgateway_service.web.listen_address | string | length > 0 %}
+  --web.listen-address={{ pushgateway_service.web.listen_address }}
+    {% endif %}
+    {% if pushgateway_service.web.telemetry_path is defined and
+          pushgateway_service.web.telemetry_path | string | length > 0 %}
+  --web.telemetry-path={{ pushgateway_service.web.telemetry_path }}
+    {% endif %}
+    {% if pushgateway_service.web.external_url is defined and
+          pushgateway_service.web.external_url | string | length > 0 %}
+  --web.external-url={{ pushgateway_service.web.external_url }}
+    {% endif %}
+    {% if pushgateway_service.web.route_prefix is defined and
+          pushgateway_service.web.route_prefix | string | length > 0 %}
+  --web.route-prefix={{ pushgateway_service.web.route_prefix }}
+    {% endif %}
+    {% if pushgateway_service.web.enable_admin_api is defined and
+          pushgateway_service.web.enable_admin_api %}
+  --web.enable-admin-api \
+    {% endif %}
+  {% endif %}
+  {% if pushgateway_service.web.enable_lifecycle is defined and
+        pushgateway_service.web.enable_lifecycle %}
+  --web.enable-lifecycle \
+  {% endif %}
+  {% if pushgateway_service.log.format is defined and
+        pushgateway_service.log.format in ["logfmt", "json"] %}
+  --log.format={{ pushgateway_service.log.format }} \
+  {% endif %}
+  --log.level={{ pushgateway_service.log.level | default('info') }}
+{% endif %}
+"
+{#
 # usage: pushgateway [<flags>]
 #
 # The Pushgateway
@@ -36,3 +69,4 @@ OPTIONS="
 #       --log.level=info           Only log messages with the given severity or above. One of: [debug, info, warn, error]
 #       --log.format=logfmt        Output format of log messages. One of: [logfmt, json]
 #       --version                  Show application version.
+#}

@@ -41,16 +41,6 @@
   notify:
     - restart pushgateway
 
-# - name: create pushgateway data directory
-#   file:
-#     path: "{{ item }}"
-#     state: directory
-#     owner: "{{ pushgateway_system_user }}"
-#     group: "{{ pushgateway_system_group }}"
-#     mode: 0755
-#   loop:
-#     - "{{ pushgateway_storage_dir }}"
-
 - name: create systemd service unit
   template:
     src: "init/systemd/pushgateway.service.j2"

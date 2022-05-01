@@ -107,13 +107,37 @@ def test_files(host, files):
     assert f.is_file
 
 
-def test_user(host):
-    assert host.group("pushgateway").exists
-    assert host.user("pushgateway").exists
-    assert "pushgateway" in host.user("pushgateway").groups
-    assert host.user("pushgateway").home == "/nonexistent"
+def test_user(host, get_vars):
+    """
+    """
+    user = get_vars.get("pushgateway_system_user", "pushgateway")
+    group = get_vars.get("pushgateway_system_group", "pushgateway")
+
+    assert host.group(group).exists
+    assert host.user(user).exists
+    assert group in host.user(user).groups
+    assert host.user(user).home == "/nonexistent"
 
 
 def test_service(host, get_vars):
     service = host.service("pushgateway")
     assert service.is_running
+
+
+def test_open_port(host, get_vars):
+    for i in host.socket.get_listening_sockets():
+        print(i)
+
+    pushgateway_service = get_vars.get("pushgateway_service", {})
+
+    print(pushgateway_service)
+
+    if isinstance(pushgateway_service, dict):
+        pushgateway_web = pushgateway_service.get("web", {})
+
+        listen_address = pushgateway_web.get("listen_address")
+    else:
+        listen_address = "0.0.0.0:9080"
+
+    service = host.socket("tcp://{0}".format(listen_address))
+    assert service.is_listening
