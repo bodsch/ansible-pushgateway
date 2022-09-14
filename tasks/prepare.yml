@@ -55,6 +55,9 @@
     - name: set pushgateway version to {{ _latest_release.json.tag_name[1:] }}
       set_fact:
         pushgateway_version: "{{ _latest_release.json.tag_name[1:] }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
   when:
     - pushgateway_version == "latest"
 
@@ -142,15 +145,10 @@
     mode: 0755
     recurse: true
 
-- name: merge pushgateway download configuration between defaults and custom
+- name: merge pushgateway configuration between defaults and custom
   set_fact:
-    pushgateway_release: "{{ pushgateway_defaults_release |
-      combine( pushgateway_release, recursive=True ) }}"
-
-- name: merge pushgateway service configuration between defaults and custom
-  set_fact:
-    pushgateway_service: "{{ pushgateway_defaults_service |
-      combine( pushgateway_service, recursive=True ) }}"
+    pushgateway_release: "{{ pushgateway_defaults_release | combine( pushgateway_release, recursive=True ) }}"
+    pushgateway_service: "{{ pushgateway_defaults_service | combine( pushgateway_service, recursive=True ) }}"
 
 - name: create persistence directory
   file:

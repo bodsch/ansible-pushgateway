@@ -3,6 +3,7 @@
 - name: detect binary file for pushgateway
   become: false
   delegate_to: "{{ pushgateway_delegate_to }}"
+  run_once: "{{ 'false' if pushgateway_direct_download else 'true' }}"
   stat:
     path: "{{ pushgateway_local_tmp_directory }}/pushgateway-{{ pushgateway_version }}.linux-{{ go_arch }}/pushgateway"
   register: stat_file_binary
