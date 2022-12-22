@@ -1,7 +1,7 @@
 ---
 
 - name: include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})
-  include_vars: "{{ lookup('first_found', params) }}"
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
   vars:
     params:
       paths:
@@ -19,11 +19,11 @@
       skip: true
 
 - name: update package cache
-  package:
+  ansible.builtin.package:
     update_cache: true
 
 - name: define delegate instance for download handling
-  set_fact:
+  ansible.builtin.set_fact:
     pushgateway_delegate_to: "{{ ansible_host }}"
     pushgateway_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
@@ -32,13 +32,19 @@
     - pushgateway_direct_download
 
 - name: install dependency
-  package:
+  ansible.builtin.package:
     name: "{{ pushgateway_requirements }}"
     state: present
 
-- block:
+- name: get latest release
+  delegate_to: localhost
+  become: false
+  run_once: true
+  when:
+    - pushgateway_version == "latest"
+  block:
     - name: get latest release
-      uri:
+      ansible.builtin.uri:
         url: "https://api.github.com/repos/prometheus/pushgateway/releases/latest"
         method: GET
         return_content: true
@@ -53,71 +59,69 @@
       retries: 5
 
     - name: set pushgateway version to {{ _latest_release.json.tag_name[1:] }}
-      set_fact:
+      ansible.builtin.set_fact:
         pushgateway_version: "{{ _latest_release.json.tag_name[1:] }}"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when:
-    - pushgateway_version == "latest"
 
 - name: detect our installation path '{{ pushgateway_install_path | dirname }}'
-  stat:
+  ansible.builtin.stat:
     path: "{{ pushgateway_install_path | dirname }}"
     get_checksum: false
   register: stat_pushgateway_path
   ignore_errors: true
 
 - name: old installation
-  block:
-    - name: stop old service
-      service:
-        name: pushgateway
-        state: stopped
-        enabled: false
-
-    - name: remove installed systemd unit
-      file:
-        state: absent
-        path: /etc/systemd/system/pushgateway.service
-
-    - name: remove installed pushgateway
-      file:
-        state: absent
-        path: "{{ stat_pushgateway_path.stat.path }}"
-
-    - name: flush handlers
-      meta: flush_handlers
   when:
     - stat_pushgateway_path is defined
     - stat_pushgateway_path.stat is defined
     - stat_pushgateway_path.stat.islnk is defined
     - stat_pushgateway_path.stat.islnk
+  block:
+    - name: stop old service
+      ansible.builtin.service:
+        name: pushgateway
+        state: stopped
+        enabled: false
 
+    - name: remove installed systemd unit
+      ansible.builtin.file:
+        state: absent
+        path: /etc/systemd/system/pushgateway.service
+
+    - name: remove installed pushgateway
+      ansible.builtin.file:
+        state: absent
+        path: "{{ stat_pushgateway_path.stat.path }}"
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: detect installed pushgateway binary
-  stat:
+  ansible.builtin.stat:
     path: "{{ pushgateway_install_path }}/pushgateway"
   register: stat_pushgateway_binary
 
 - name: create download directory
   become: false
   delegate_to: "{{ pushgateway_delegate_to }}"
-  file:
+  ansible.builtin.file:
     path: "{{ pushgateway_local_tmp_directory }}"
     state: directory
     mode: 0750
 
 - name: user and group handling
+  when:
+    - pushgateway_system_user != "root" or pushgateway_system_group != "root"
   block:
     - name: create pushgateway group
-      group:
+      ansible.builtin.group:
         name: "{{ pushgateway_system_group }}"
         state: present
         system: true
+      when:
+        - pushgateway_system_group != "root"
 
     - name: create pushgateway user
-      user:
+      ansible.builtin.user:
         name: "{{ pushgateway_system_user }}"
         groups: "{{ pushgateway_system_group }}"
         append: true
@@ -125,11 +129,11 @@
         system: true
         createhome: false
         home: /nonexistent
-  when:
-    - pushgateway_system_user != "root"
+      when:
+        - pushgateway_system_user != "root"
 
 - name: create install directory
-  file:
+  ansible.builtin.file:
     path: "{{ pushgateway_install_path }}"
     state: directory
     owner: "{{ pushgateway_system_user }}"
@@ -137,7 +141,7 @@
     mode: 0755
 
 - name: fix directory rights for {{ pushgateway_install_path | dirname }}
-  file:
+  ansible.builtin.file:
     path: "{{ pushgateway_install_path | dirname }}"
     state: directory
     owner: "{{ pushgateway_system_user }}"
@@ -146,12 +150,12 @@
     recurse: true
 
 - name: merge pushgateway configuration between defaults and custom
-  set_fact:
-    pushgateway_release: "{{ pushgateway_defaults_release | combine( pushgateway_release, recursive=True ) }}"
-    pushgateway_service: "{{ pushgateway_defaults_service | combine( pushgateway_service, recursive=True ) }}"
+  ansible.builtin.set_fact:
+    pushgateway_release: "{{ pushgateway_defaults_release | combine(pushgateway_release, recursive=True) }}"
+    pushgateway_service: "{{ pushgateway_defaults_service | combine(pushgateway_service, recursive=True) }}"
 
 - name: create persistence directory
-  file:
+  ansible.builtin.file:
     state: directory
     owner: "{{ pushgateway_system_user }}"
     group: "{{ pushgateway_system_group }}"

@@ -1,6 +1,6 @@
 ---
 
-pushgateway_version: "1.4.2"
+pushgateway_version: "1.5.1"
 
 pushgateway_release:
   download_url: https://github.com/prometheus/pushgateway/releases/

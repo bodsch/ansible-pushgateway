@@ -1,7 +1,7 @@
 ---
 
 - name: create pushgateway configuration directories
-  file:
+  ansible.builtin.file:
     path: "{{ pushgateway_config_directory }}"
     state: directory
     owner: root
@@ -9,7 +9,7 @@
     mode: 0770
 
 - name: create systemd pushgateway config
-  template:
+  ansible.builtin.template:
     src: pushgateway.j2
     dest: "{{ pushgateway_config_directory }}/pushgateway"
     mode: 0644
@@ -18,6 +18,6 @@
     - restart pushgateway
 
 - name: flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 ...
