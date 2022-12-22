@@ -1,7 +1,5 @@
 ---
 
-pushgateway_version: latest
-
 pushgateway_service:
   log:
     level: debug
