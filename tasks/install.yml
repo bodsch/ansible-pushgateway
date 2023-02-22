@@ -41,6 +41,23 @@
   notify:
     - restart pushgateway
 
+- name: create local facts
+  ansible.builtin.template:
+    src: ansible_facts.j2
+    dest: /etc/ansible/facts.d/pushgateway.fact
+    mode: 0755
+
+- name: create persistence directory
+  ansible.builtin.file:
+    state: directory
+    owner: "{{ pushgateway_system_user }}"
+    group: "{{ pushgateway_system_group }}"
+    mode: 0750
+    path: "{{ pushgateway_service.persistence.file | dirname }}"
+  when:
+    - pushgateway_service.persistence.file is defined
+    - pushgateway_service.persistence.file | string | length > 0
+      
 - name: create systemd service unit
   ansible.builtin.template:
     src: "init/systemd/pushgateway.service.j2"

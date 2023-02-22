@@ -1,12 +1,9 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
-GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
-
 OPTIONS="
 {% if pushgateway_service is defined %}
   {% if pushgateway_service.persistence is defined %}
-
     {% if pushgateway_service.persistence.file is defined and
           pushgateway_service.persistence.file | string | length > 0 %}
   --persistence.file={{ pushgateway_service.persistence.file }} \
