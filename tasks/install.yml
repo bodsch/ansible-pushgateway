@@ -41,11 +41,11 @@
   notify:
     - restart pushgateway
 
-- name: create local facts
-  ansible.builtin.template:
-    src: ansible_facts.j2
-    dest: /etc/ansible/facts.d/pushgateway.fact
-    mode: 0755
+- name: create custom fact file
+  bodsch.core.facts:
+    name: pushgateway
+    facts:
+      version: "{{ pushgateway_version }}"
 
 - name: create persistence directory
   ansible.builtin.file:
@@ -57,7 +57,7 @@
   when:
     - pushgateway_service.persistence.file is defined
     - pushgateway_service.persistence.file | string | length > 0
-      
+
 - name: create systemd service unit
   ansible.builtin.template:
     src: "init/systemd/pushgateway.service.j2"

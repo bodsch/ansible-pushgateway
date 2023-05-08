@@ -2,6 +2,6 @@
 
 - name: prometheus
   src: bodsch.prometheus
-  version: 1.4.1
+  version: 1.5.0
 
 ...

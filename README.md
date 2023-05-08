@@ -20,16 +20,27 @@ If `latest` is set for `pushgateway_version`, the role tries to install the late
 The binaries are installed below `/usr/local/bin/pushgateway/${pushgateway_version}` and later linked to `/usr/bin`. 
 This should make it possible to downgrade relatively safely.
 
-The Prometheus archive is stored on the Ansible controller, unpacked and then the binaries are copied to the target system.
+The downloaded archive is stored on the Ansible controller, unpacked and then the binaries are copied to the target system.
 The cache directory can be defined via the environment variable `CUSTOM_LOCAL_TMP_DIRECTORY`. 
 By default it is `${HOME}/.cache/ansible/pushgateway`.
 If this type of installation is not desired, the download can take place directly on the target system. 
 However, this must be explicitly activated by setting `pushgateway_direct_download` to `true`.
 
-
 ## Requirements & Dependencies
 
-- None
+Ansible Collections
+
+- [bodsch.core](https://github.com/bodsch/ansible-collection-core)
+- [bodsch.scm](https://github.com/bodsch/ansible-collection-scm)
+
+```bash
+ansible-galaxy collection install bodsch.core
+ansible-galaxy collection install bodsch.scm
+```
+or
+```bash
+ansible-galaxy collection install --requirements-file collections.yml
+```
 
 ### Operating systems
 
